@@ -2,6 +2,7 @@ package com.atguigu.wordcount
 
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig
 
 object StreamWordCount {
   def main(args: Array[String]): Unit = {
@@ -26,6 +27,8 @@ object StreamWordCount {
       .sum(1)
 
     dataStream.print().setParallelism(1)
+
+
 
     // 启动executor，执行任务
     env.execute("Socket stream word count")
