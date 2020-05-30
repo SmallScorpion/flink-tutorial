@@ -9,7 +9,6 @@ import org.apache.flink.util.Collector
 
 object TempIncreWarningTest {
   def main(args: Array[String]): Unit = {
-    def main(args: Array[String]): Unit = {
       val env = StreamExecutionEnvironment.getExecutionEnvironment
       env.setParallelism(1)
 
@@ -30,7 +29,6 @@ object TempIncreWarningTest {
 
       env.execute("stateBackendsApp test job")
     }
-  }
 }
 
 /**

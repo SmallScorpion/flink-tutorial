@@ -38,27 +38,21 @@ object StateTempChangeAlertTest {
 case class TempChangeAlert(tpr: Double) extends RichFlatMapFunction[SensorReading, (String, Double, Double)]{
 
   var lastTempState: ValueState[Double] = _
-  var firstId: ValueState[Boolean] = _
+  var isFirstId: ValueState[Boolean] = _
 
   override def open(parameters: Configuration): Unit = {
     lastTempState = getRuntimeContext
       .getState( new ValueStateDescriptor[Double]( "last_time", classOf[Double]) )
 
-    firstId = getRuntimeContext
-      .getState( new ValueStateDescriptor[Boolean]( "first_id", classOf[Boolean]) )
+    isFirstId = getRuntimeContext
+      .getState( new ValueStateDescriptor[Boolean]( "first_id", classOf[Boolean], false) )
   }
 
   override def flatMap(value: SensorReading, out: Collector[(String, Double, Double)]): Unit = {
 
     // 获取上一次得值
     val lastTemp: Double = lastTempState.value()
-    val bool: Boolean = firstId.value()
-    if(bool == false){
-      firstId.update(true)
-    }
-
-    // 更新状态
-    lastTempState.update(value.temperature)
+    val bool: Boolean = isFirstId.value()
 
     // 两次得值相减得绝对值，大于传入得警告温度，则发生报警
     val diff: Double = (value.temperature - lastTemp).abs
@@ -67,5 +61,8 @@ case class TempChangeAlert(tpr: Double) extends RichFlatMapFunction[SensorReadin
       out.collect( (value.id, lastTemp, value.temperature) )
     }
 
+    // 更新状态
+    lastTempState.update(value.temperature)
+    isFirstId.update(true)
   }
 }
