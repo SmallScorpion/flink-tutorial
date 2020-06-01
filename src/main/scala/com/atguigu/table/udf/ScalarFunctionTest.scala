@@ -1,4 +1,4 @@
-package com.atguigu.table
+package com.atguigu.table.udf
 
 import java.sql.Timestamp
 
@@ -9,8 +9,10 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.table.api.Table
 import org.apache.flink.table.api.scala._
+import org.apache.flink.table.functions.ScalarFunction
+import org.apache.flink.types.Row
 
-object ProcessingTimeTableTest {
+object ScalarFunctionTest {
   def main(args: Array[String]): Unit = {
 
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
@@ -36,18 +38,43 @@ object ProcessingTimeTableTest {
 
     // 用proctime定义处理时间
     val dataTable: Table = tableEnv
-      .fromDataStream(dataDStream, 'id, 'temperature, 'timestamp, 'pt.proctime)
+      .fromDataStream(dataDStream, 'id, 'temperature, 'timestamp.rowtime as 'ts)
 
-    // 查询
+    // 使用自定义的hash函数，求id的哈希值
+    val myHashCode = MyHashCode(1.23)
+
+    // 查询 Table API 方式
     val resultTable: Table = dataTable
-      .select('id, 'temperature,'pt) // 查询id和temperature字段
-      .filter('id === "sensor_1") // 输出sensor_1得数据
+      .select('id, 'ts, myHashCode('id)) // 查询id和temperature字段
+
+
+    // SQL调用方式，首先要注册表
+    tableEnv.createTemporaryView("dataTable", dataTable)
+    // 注册函数
+    tableEnv.registerFunction("myHashCode", myHashCode)
+
+    val resultSqlTable: Table = tableEnv.sqlQuery(
+      """
+        |select id, ts, myHashCode(id)
+        |from dataTable
+        |""".stripMargin)
+
 
     // 测试输出
-    resultTable.toAppendStream[ (String, Double, Timestamp) ].print( "process" )
+    resultTable.toAppendStream[ Row ].print( "scalar" )
+    resultSqlTable.toAppendStream[ Row ].print( "scalar_sql" )
     // 查看表结构
     dataTable.printSchema()
 
     env.execute(" table ProcessingTime test job")
+  }
+}
+
+// 自定义一个求hash code的标量函数
+case class MyHashCode(factor: Double) extends ScalarFunction{
+  def eval( value: String ): Int ={
+
+    (value.hashCode * factor).toInt
+
   }
 }

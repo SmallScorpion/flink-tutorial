@@ -1,4 +1,4 @@
-package com.atguigu.table
+package com.atguigu.table.eventTime
 
 import java.sql.Timestamp
 

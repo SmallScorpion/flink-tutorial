@@ -1,12 +1,10 @@
-package com.atguigu.table
+package com.atguigu.table.processingtime
 
 import java.sql.Timestamp
 
-import com.atguigu.bean.SensorReading
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.table.api.Table
 import org.apache.flink.table.api.scala._
-import org.apache.flink.table.api.{DataTypes, Table}
-import org.apache.flink.table.descriptors.{Csv, Kafka, Schema}
 
 object ProcessingTimeSqlTest {
   def main(args: Array[String]): Unit = {

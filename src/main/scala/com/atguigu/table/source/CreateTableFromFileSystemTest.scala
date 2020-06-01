@@ -1,8 +1,8 @@
-package com.atguigu.table
+package com.atguigu.table.source
 
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.table.api.{DataTypes, Table}
 import org.apache.flink.table.api.scala._
+import org.apache.flink.table.api.{DataTypes, Table}
 import org.apache.flink.table.descriptors.{FileSystem, OldCsv, Schema}
 
 object CreateTableFromFileSystemTest {

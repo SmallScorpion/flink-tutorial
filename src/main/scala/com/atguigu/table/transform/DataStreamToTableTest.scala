@@ -1,8 +1,8 @@
-package com.atguigu.table
+package com.atguigu.table.transform
 
 import com.atguigu.bean.SensorReading
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.table.api.{DataTypes, Table}
+import org.apache.flink.table.api.Table
 import org.apache.flink.table.api.scala._
 
 object DataStreamToTableTest {

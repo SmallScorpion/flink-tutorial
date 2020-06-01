@@ -1,11 +1,11 @@
-package com.atguigu.table
+package com.atguigu.table.query
 
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.table.api.scala._
 import org.apache.flink.table.api.{DataTypes, Table}
-import org.apache.flink.table.descriptors.{Csv, FileSystem, OldCsv, Schema}
+import org.apache.flink.table.descriptors.{FileSystem, OldCsv, Schema}
 
-object QueryTableSQLTest {
+object QueryTableAPITest {
   def main(args: Array[String]): Unit = {
 
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
@@ -18,7 +18,7 @@ object QueryTableSQLTest {
     val filePath = "D:\\MyWork\\WorkSpaceIDEA\\flink-tutorial\\src\\main\\resources\\SensorReading.txt"
 
     tableEnv.connect( new FileSystem().path(filePath) ) // 定义表的数据来源，和外部系统建立连接
-      .withFormat( new Csv() ) // 定义从外部文件读取数据之后的格式化方法
+      .withFormat( new OldCsv() ) // 定义从外部文件读取数据之后的格式化方法
       .withSchema( new Schema() // 定义表结构
         .field("id", DataTypes.STRING())
         .field("timestamp", DataTypes.BIGINT())
@@ -31,26 +31,23 @@ object QueryTableSQLTest {
 
     val sensorTable: Table = tableEnv.from( "inputTable" )
 
-    tableEnv.registerTable("sensorTable", sensorTable) // 注册表
-    val resultSqlTable: Table = tableEnv.sqlQuery(
-      """
-        |select
-        |   id, temperature
-        |from
-        |   sensorTable
-        |where
-        |   id = 'sensor_1'
-        |""".stripMargin
-    )
+    // 1. Table API的调用
 
-    val aggResultSqlTable: Table = tableEnv
-      .sqlQuery("select id, count(id) as cnt from sensorTable group by id")
+    // 简单查询
+    val resultTable: Table = sensorTable
+      .select('id, 'temperature) // 查询id和temperature字段
+      .filter('id === "sensor_1") // 输出sensor_1得数据
+
+    // 聚合查询
+    val aggResultTable: Table = sensorTable
+        .groupBy('id)
+        .select('id, 'id.count as 'count)
 
 
     // 测试输出
-    resultSqlTable.toAppendStream[ (String, Double) ].print( "easy " )
-    aggResultSqlTable.toRetractStream[ (String, Long) ].print( "agg" )
+    resultTable.toAppendStream[ (String, Double) ].print( "easy" )
+    aggResultTable.toRetractStream[ (String, Long) ].print( "agg" )
 
-    env.execute(" tableSQL query test job")
+    env.execute(" tableAPI query test job")
   }
 }
